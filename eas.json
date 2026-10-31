@@ -1,0 +1,6 @@
+{
+  "build": {
+    "development": { "developmentClient": false, "distribution": "internal", "android": { "buildType": "apk", "gradleCommand": ":app:assembleDebug" }, "env": { "EXPO_PUBLIC_ALLOW_LOCAL_HTTP": "1" } },
+    "preview": { "distribution": "internal", "android": { "buildType": "apk" } }
+  }
+}

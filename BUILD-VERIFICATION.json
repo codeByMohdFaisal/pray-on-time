@@ -1,0 +1,37 @@
+{
+  "version": "0.1.1",
+  "package": "com.masjidazan.pilot",
+  "sizeBytes": 27096023,
+  "apkSha256": "bbf509a9597211250c51175ea572820eda94c7afe8d0dff1e0e8daf8acfc1f3e",
+  "minSdk": 26,
+  "targetSdk": 36,
+  "abi": "arm64-v8a",
+  "standaloneBundlePresent": true,
+  "alarmModulePresent": true,
+  "scheduler": "AlarmManager.setAlarmClock",
+  "bundledAudioPresent": true,
+  "signatureVerified": true,
+  "signatureScheme": "v2",
+  "signingPurpose": "internal pilot (Android debug certificate)",
+  "zipAlignment16KiBVerified": true,
+  "physicalDeviceTested": false,
+  "checks": [
+    "TypeScript",
+    "ESLint",
+    "7 domain tests",
+    "7 backend tests",
+    "DOM integration smoke including local timetable"
+  ],
+  "signatureDetails": "Verifies\nVerified using v1 scheme (JAR signing): false\nVerified using v2 scheme (APK Signature Scheme v2): true\nVerified using v3 scheme (APK Signature Scheme v3): false\nVerified using v3.1 scheme (APK Signature Scheme v3.1): false\nVerified using v4 scheme (APK Signature Scheme v4): false\nVerified for SourceStamp: false\nNumber of signers: 1\nSigner #1 certificate DN: CN=Android Debug, OU=Android, O=Unknown, L=Unknown, ST=Unknown, C=US\nSigner #1 certificate SHA-256 digest: fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c\nSigner #1 certificate SHA-1 digest: 5e8f16062ea3cd2c4a0d547876baa6f38cabf625\nSigner #1 certificate MD5 digest: 20f46148b72d8e5e5ca23d37a4f41490\nSigner #1 key algorithm: RSA\nSigner #1 key size (bits): 2048\nSigner #1 public key SHA-256 digest: 06104aa0b28fac286bae06b08313ac69c37c35a6462853db32d2ec5fa7b1ed0e\nSigner #1 public key SHA-1 digest: 88325602a013a12d5ac13516c609aa57ce9e2234\nSigner #1 public key MD5 digest: 49921988ad9941656cd9b95203196f17",
+  "backendMigration": {
+    "version": "0.2.0",
+    "runtime": "Node.js",
+    "framework": "Express 5",
+    "database": "MongoDB",
+    "driver": "official mongodb driver",
+    "mongodbIntegrationTestsPassed": 12,
+    "frontendIntegrationPassed": true,
+    "deployed": false,
+    "apkRebuildRequired": false
+  }
+}
