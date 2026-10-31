@@ -1,7 +1,7 @@
 import type { ExpoConfig } from 'expo/config';
 
 const config: ExpoConfig = {
-  name: 'PrayOnTime', slug: 'masjid-azan', version: '0.1.1',
+  name: 'PrayOnTime', slug: 'pray-on-time', version: '0.1.2',
   scheme: 'masjidazan', orientation: 'portrait', userInterfaceStyle: 'light',
   icon: './assets/azan-icon.png',
   platforms: ['android', 'web'],
