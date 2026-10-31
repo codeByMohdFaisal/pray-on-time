@@ -11,5 +11,6 @@ export default function Layout() {
     <Tabs.Screen name="index" options={{ title: 'My masjid', tabBarIcon: ({ color }) => <Text style={{ fontSize: 23, color }}>⌂</Text> }} />
     <Tabs.Screen name="volunteer" options={{ title: 'Volunteer', tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>▤</Text> }} />
     <Tabs.Screen name="settings" options={{ title: 'Settings', tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>⚙</Text> }} />
+    <Tabs.Screen name="admin" options={{ title: 'Admin', tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>A</Text> }} />
   </Tabs></PilotProvider></SafeAreaProvider>;
 }

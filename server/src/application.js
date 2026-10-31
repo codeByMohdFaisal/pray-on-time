@@ -40,6 +40,8 @@ export function createApp(store, { corsOrigins = [], trustProxyHops = 0 } = {}) 
   app.get('/masjids/:id/schedule', async (req, res) => res.json(await store.timetable(req.params.id)));
   app.post('/session', async (req, res) => res.json(await store.login(req.body)));
   app.delete('/session', async (req, res) => { await store.logout(bearer(req)); res.json({ ok: true }); });
+  app.post('/admin/masjids', async (req, res) => res.status(201).json(await store.createMasjid(bearer(req), req.body)));
+  app.put('/admin/masjids/:id/volunteer', async (req, res) => { await store.assignVolunteer(bearer(req), req.params.id, req.body); res.json({ ok: true }); });
   app.put('/masjids/:id/schedule', async (req, res) => res.json(await store.update(req.params.id, req.body, bearer(req))));
   app.use((_req, _res, next) => next(new Problem(404, 'Not found')));
   // Express 5 forwards rejected async handlers here. Never expose DB errors,

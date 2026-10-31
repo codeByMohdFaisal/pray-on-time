@@ -23,7 +23,8 @@ export default function Volunteer() {
     setReview(false);
   }
   async function load() {
-    if (p.session && p.state.baseUrl) fill(await api.timetable(p.state.baseUrl, p.session.masjidId));
+    const masjidId = p.session?.role === 'volunteer' ? p.session.masjidId : null;
+    if (masjidId && p.state.baseUrl) fill(await api.timetable(p.state.baseUrl, masjidId));
   }
   const assigned = p.session?.masjidId;
   const base = p.state.baseUrl;
@@ -38,8 +39,9 @@ export default function Volunteer() {
     // Login and server selection are the only triggers for loading this editor.
   }, [assigned, base]);
   async function save() {
-    if (!p.session || !table || !schedule) return;
-    const result = await api.update(p.state.baseUrl, p.session.masjidId, table.masjid.revision!, schedule, p.session.token);
+    const masjidId = p.session?.role === 'volunteer' ? p.session.masjidId : null;
+    if (!p.session || !masjidId || !table || !schedule) return;
+    const result = await api.update(p.state.baseUrl, masjidId, table.masjid.revision!, schedule, p.session.token);
     fill(result);
     await p.applyTable(result);
     setMessage('Published. Followers receive these timings when their phones next sync.');
@@ -54,6 +56,9 @@ export default function Volunteer() {
         <Field label="Password" secureTextEntry autoCapitalize="none" autoComplete="current-password" value={password} onChangeText={setPassword} />
         <Button label="Sign in" disabled={p.busy || !email || !password} onPress={() => void p.act(async () => { await p.login(email.trim(), password); setPassword(''); })} />
       </Card>
+    </> : p.session.role === 'admin' ? <>
+      <Note>You are signed in as an administrator. Use the Admin tab to add masjids and create volunteer access.</Note>
+      <Button label="Sign out" secondary disabled={p.busy} onPress={() => void p.act(p.logout)} />
     </> : <>
       <View style={styles.row}><Text style={[styles.body, { flex: 1 }]}>{p.session.email}</Text><Button label="Sign out" secondary disabled={p.busy} onPress={() => void p.act(p.logout)} /></View>
       {!!loadError && <Note>{loadError}</Note>}

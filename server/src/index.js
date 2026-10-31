@@ -14,6 +14,7 @@ try {
   await client.connect();
   const store = new Store(client.db(settings.database));
   await store.init();
+  if (settings.bootstrapAdminEmail) await store.bootstrapAdmin(settings.bootstrapAdminEmail, settings.bootstrapAdminPassword);
   server = createApp(store, settings).listen(settings.port, settings.host, () =>
     console.log(`Masjid API listening on ${settings.host}:${settings.port}`),
   );

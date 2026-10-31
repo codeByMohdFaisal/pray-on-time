@@ -15,6 +15,7 @@ interface ContextValue {
   status: AlarmStatus; native: boolean; syncedAt: number;
   session: Session | null;
   act: (fn: () => Promise<void>) => Promise<void>;
+  reloadMasjids: () => Promise<void>;
   select: (id: string) => Promise<void>;
   sync: () => Promise<void>;
   setMode: (mode: AlertMode) => Promise<void>;
@@ -28,9 +29,10 @@ interface ContextValue {
 }
 const Ctx = createContext<ContextValue | null>(null);
 export const usePilot = () => useContext(Ctx)!;
+export const DEFAULT_API_URL = 'https://pray-on-time-api.vercel.app';
 
 export function PilotProvider({ children }: { children: React.ReactNode }) {
-  const initial = { ...sampleTables()[0], mode: 'off' as AlertMode, baseUrl: '' };
+  const initial = { ...sampleTables()[0], mode: 'off' as AlertMode, baseUrl: DEFAULT_API_URL };
   const [state, setState] = useState<SavedState>(initial);
   const current = useRef(state);
   const [masjids, setMasjids] = useState(sampleTables().map(t => t.masjid));
@@ -86,7 +88,10 @@ export function PilotProvider({ children }: { children: React.ReactNode }) {
         }
         if (current.current.baseUrl) {
           try { setMasjids(await api.masjids(current.current.baseUrl)); await sync(); }
-          catch { setError('Offline or server unavailable. Showing downloaded timings.'); }
+          catch (error) {
+            const message = error instanceof Error ? error.message : '';
+            setError(message === 'Masjid not found' ? 'No masjid has been added to this service yet. An administrator can add the first one.' : 'Offline or server unavailable. Showing downloaded timings.');
+          }
         }
         await refreshStatus();
       } catch { setError('Could not restore settings. Re-select your masjid before enabling alerts.'); }
@@ -115,6 +120,10 @@ export function PilotProvider({ children }: { children: React.ReactNode }) {
     await persist({ ...table, mode: 'off', baseUrl });
     setMasjids(list);
     setSyncedAt(Date.now());
+  }
+  async function reloadMasjids() {
+    if (!current.current.baseUrl) return;
+    setMasjids(await api.masjids(current.current.baseUrl));
   }
   async function select(id: string) {
     if (id === current.current.masjid.id) return;
@@ -163,5 +172,5 @@ export function PilotProvider({ children }: { children: React.ReactNode }) {
     if (!Alarm.status().notificationsAllowed) throw new Error('Enable notifications first.');
     Alarm.test(current.current.mode === 'audio' ? 'audio' : 'notification');
   }
-  return <Ctx.Provider value={{ state, masjids, busy, ready, error, status, syncedAt, native: !!Alarm, session, act, select, sync, setMode, connect, login, logout, applyTable, importAudio, permissions, test }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ state, masjids, busy, ready, error, status, syncedAt, native: !!Alarm, session, act, reloadMasjids, select, sync, setMode, connect, login, logout, applyTable, importAudio, permissions, test }}>{children}</Ctx.Provider>;
 }

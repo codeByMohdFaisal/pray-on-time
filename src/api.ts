@@ -1,5 +1,6 @@
 import { validateTable, Timetable, Masjid, Schedule } from './domain';
-export interface Session { token: string; masjidId: string; email: string }
+export interface Session { token: string; masjidId: string | null; email: string; role: 'admin' | 'volunteer' }
+export interface MasjidInput { id: string; name: string; area: string; timezone: string }
 
 export function normaliseUrl(value: string): string {
   const trimmed = value.trim().replace(/\/+$/, '');
@@ -24,5 +25,7 @@ export const api = {
   timetable: async (base: string, id: string) => validateTable(await request(base, `/masjids/${encodeURIComponent(id)}/schedule`)),
   login: (base: string, email: string, password: string) => request<Session>(base, '/session', 'POST', { email, password }),
   logout: (base: string, token: string) => request(base, '/session', 'DELETE', undefined, token),
+  createMasjid: (base: string, input: MasjidInput, token: string) => request<Masjid>(base, '/admin/masjids', 'POST', input, token),
+  assignVolunteer: (base: string, masjidId: string, email: string, password: string, token: string) => request<{ ok: true }>(base, `/admin/masjids/${encodeURIComponent(masjidId)}/volunteer`, 'PUT', { email, password }, token),
   update: async (base: string, id: string, revision: number, schedule: Schedule, token: string): Promise<Timetable> => validateTable(await request(base, `/masjids/${encodeURIComponent(id)}/schedule`, 'PUT', { ...schedule, expectedRevision: revision }, token)),
 };
