@@ -1,3 +1,5 @@
+// Vercel detects an Express deployment from this direct import in the entry file.
+import "express";
 import { MongoClient } from "mongodb";
 import { Store } from "./store.js";
 import { createApp } from "./application.js";
