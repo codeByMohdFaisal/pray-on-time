@@ -11,11 +11,22 @@ const client = new MongoClient(settings.uri, {
 let apiPromise;
 async function api() {
   if (!apiPromise) apiPromise = (async () => {
-    await client.connect();
-    const store = new Store(client.db(settings.database));
-    await store.init();
-    if (settings.bootstrapAdminEmail) await store.bootstrapAdmin(settings.bootstrapAdminEmail, settings.bootstrapAdminPassword);
-    return createApp(express, store, settings);
+    let stage = 'database connection';
+    try {
+      await client.connect();
+      const store = new Store(client.db(settings.database));
+      stage = 'database initialization';
+      await store.init();
+      if (settings.bootstrapAdminEmail) {
+        stage = 'administrator bootstrap';
+        await store.bootstrapAdmin(settings.bootstrapAdminEmail, settings.bootstrapAdminPassword);
+      }
+      return createApp(express, store, settings);
+    } catch (error) {
+      // This identifies the failing operation without logging credentials or database details.
+      console.error(`API startup failed during ${stage}.`);
+      throw error;
+    }
   })();
   return apiPromise;
 }
@@ -26,7 +37,6 @@ app.disable("x-powered-by");
 app.use(async (req, res, next) => {
   try { return (await api())(req, res, next); }
   catch {
-    console.error("API startup failed. Check MongoDB connectivity and configuration.");
     return res.status(503).json({ error: "Service temporarily unavailable" });
   }
 });
