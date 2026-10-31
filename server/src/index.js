@@ -1,6 +1,6 @@
 import { MongoClient } from "mongodb";
 import { Store } from "./store.js";
-import { createApp } from "./app.js";
+import { createApp } from "./application.js";
 import { config } from "./config.js";
 
 const settings = config();

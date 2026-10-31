@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { MongoClient } from 'mongodb';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { Store } from '../src/store.js';
-import { createApp } from '../src/app.js';
+import { createApp } from '../src/application.js';
 import { localDate, addDays } from '../src/domain.js';
 
 process.env.MONGOMS_DISTRO ||= 'ubuntu-22.04';

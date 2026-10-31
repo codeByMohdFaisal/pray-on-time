@@ -2,7 +2,7 @@
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { MongoClient } from 'mongodb';
 import { Store } from '../src/store.js';
-import { createApp } from '../src/app.js';
+import { createApp } from '../src/application.js';
 process.env.MONGOMS_DISTRO ||= 'ubuntu-22.04';
 process.env.MONGOMS_DOWNLOAD_IGNORE_MISSING_HEADER = 'true';
 const mongo = await MongoMemoryServer.create({ binary: { version: process.env.MONGOMS_VERSION || '8.0.17' }, instance: { ip: '127.0.0.1', args: ['--nounixsocket'] } });
