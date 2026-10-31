@@ -1,6 +1,4 @@
-import type { ExpoConfig } from 'expo/config';
-
-const config: ExpoConfig = {
+const config = {
   name: 'PrayOnTime', slug: 'pray-on-time', version: '0.1.2',
   scheme: 'masjidazan', orientation: 'portrait', userInterfaceStyle: 'light',
   icon: './assets/azan-icon.png',
@@ -14,6 +12,7 @@ const config: ExpoConfig = {
   plugins: ['expo-router', 'expo-secure-store', ['expo-build-properties', {
     android: { minSdkVersion: 26, usesCleartextTraffic: process.env.EXPO_PUBLIC_ALLOW_LOCAL_HTTP === '1' },
   }]],
+  extra: { eas: { projectId: 'ae36493d-b79a-4595-906c-af740c66c67b' } },
   web: { bundler: 'metro', output: 'single' },
 };
 export default config;
