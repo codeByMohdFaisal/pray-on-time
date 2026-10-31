@@ -1,6 +1,7 @@
 // Test fixture only: starts real ephemeral MongoDB + Express for the UI smoke.
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { MongoClient } from 'mongodb';
+import express from 'express';
 import { Store } from '../src/store.js';
 import { createApp } from '../src/application.js';
 process.env.MONGOMS_DISTRO ||= 'ubuntu-22.04';
@@ -9,6 +10,6 @@ const mongo = await MongoMemoryServer.create({ binary: { version: process.env.MO
 const client = new MongoClient(mongo.getUri()); await client.connect();
 const store = new Store(client.db('azan_ui_smoke')); await store.init(); await store.seedDemo();
 await store.approveVolunteer('volunteer@example.test', 'Smoke-password-123', 'sample-noor');
-const server = createApp(store).listen(0, '127.0.0.1', () => process.stdout.write(String(server.address().port) + '\n'));
+const server = createApp(express, store).listen(0, '127.0.0.1', () => process.stdout.write(String(server.address().port) + '\n'));
 async function stop() { await new Promise(resolve => server.close(resolve)); await client.close(); await mongo.stop(); }
 process.once('SIGTERM', stop); process.once('SIGINT', stop);

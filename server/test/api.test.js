@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { MongoClient } from 'mongodb';
 import { MongoMemoryServer } from 'mongodb-memory-server';
+import express from 'express';
 import { Store } from '../src/store.js';
 import { createApp } from '../src/application.js';
 import { localDate, addDays } from '../src/domain.js';
@@ -26,7 +27,7 @@ beforeEach(async () => {
   if (server) await new Promise(resolve => server.close(resolve));
   await db.dropDatabase(); store = new Store(db); await store.init(); await store.seedDemo();
   await store.approveVolunteer('volunteer@example.test', 'Test-password-123', 'sample-noor');
-  server = createApp(store).listen(0, '127.0.0.1'); await new Promise(resolve => server.once('listening', resolve));
+  server = createApp(express, store).listen(0, '127.0.0.1'); await new Promise(resolve => server.once('listening', resolve));
   base = `http://127.0.0.1:${server.address().port}`;
   const login = await request('/session', { method: 'POST', auth: null, data: { email: 'volunteer@example.test', password: 'Test-password-123' } });
   assert.equal(login.status, 200); token = login.data.token;

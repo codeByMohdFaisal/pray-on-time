@@ -1,5 +1,4 @@
-// Vercel detects an Express deployment from this direct import in the entry file.
-import "express";
+import express from "express";
 import { MongoClient } from "mongodb";
 import { Store } from "./store.js";
 import { createApp } from "./application.js";
@@ -9,35 +8,45 @@ const settings = config();
 const client = new MongoClient(settings.uri, {
   serverSelectionTimeoutMS: 10000,
 });
-let server;
-try {
-  await client.connect();
-  const store = new Store(client.db(settings.database));
-  await store.init();
-  if (settings.bootstrapAdminEmail) await store.bootstrapAdmin(settings.bootstrapAdminEmail, settings.bootstrapAdminPassword);
-  server = createApp(store, settings).listen(settings.port, settings.host, () =>
-    console.log(`Masjid API listening on ${settings.host}:${settings.port}`),
-  );
-  server.on("error", async () => {
-    console.error("Unable to start HTTP server");
+let apiPromise;
+async function api() {
+  if (!apiPromise) apiPromise = (async () => {
+    await client.connect();
+    const store = new Store(client.db(settings.database));
+    await store.init();
+    if (settings.bootstrapAdminEmail) await store.bootstrapAdmin(settings.bootstrapAdminEmail, settings.bootstrapAdminPassword);
+    return createApp(express, store, settings);
+  })();
+  return apiPromise;
+}
+
+// This default Express export is Vercel's single serverless entry point.
+const app = express();
+app.disable("x-powered-by");
+app.use(async (req, res, next) => {
+  try { return (await api())(req, res, next); }
+  catch {
+    console.error("API startup failed. Check MongoDB connectivity and configuration.");
+    return res.status(503).json({ error: "Service temporarily unavailable" });
+  }
+});
+
+if (!process.env.VERCEL) {
+  let server;
+  try {
+    const localApi = await api();
+    server = localApi.listen(settings.port, settings.host, () => console.log(`Masjid API listening on ${settings.host}:${settings.port}`));
+  } catch {
+    console.error("API startup failed. Check MongoDB connectivity and configuration.");
     await client.close();
     process.exitCode = 1;
-  });
-} catch {
-  console.error(
-    "API startup failed. Check MongoDB connectivity and configuration.",
-  );
-  await client.close();
-  process.exitCode = 1;
+  }
+  async function stop() {
+    if (server) await new Promise(resolve => server.close(resolve));
+    await client.close();
+  }
+  process.once("SIGINT", stop);
+  process.once("SIGTERM", stop);
 }
-let stopping = false;
-async function stop() {
-  if (stopping) return;
-  stopping = true;
-  const timer = setTimeout(() => process.exit(1), 10000).unref();
-  if (server) await new Promise((resolve) => server.close(resolve));
-  await client.close();
-  clearTimeout(timer);
-}
-process.once("SIGINT", stop);
-process.once("SIGTERM", stop);
+
+export default app;

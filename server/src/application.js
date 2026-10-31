@@ -1,5 +1,4 @@
 // Builds the HTTP application from injected storage.
-import express from 'express';
 import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
 import { Problem, object } from './domain.js';
@@ -9,7 +8,7 @@ function bearer(req) {
   if (!header || !/^Bearer [A-Za-z0-9_-]{43}$/.test(header)) throw new Problem(401, 'Please sign in again');
   return header.slice(7);
 }
-export function createApp(store, { corsOrigins = [], trustProxyHops = 0 } = {}) {
+export function createApp(express, store, { corsOrigins = [], trustProxyHops = 0 } = {}) {
   const app = express();
   app.disable('x-powered-by');
   if (!Number.isInteger(trustProxyHops) || trustProxyHops < 0 || trustProxyHops > 5) throw new Error('Invalid trusted proxy hop count');
