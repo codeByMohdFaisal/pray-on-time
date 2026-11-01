@@ -73,6 +73,6 @@ export default function Settings() {
       <Text style={styles.body}>Online background checks are best effort, roughly every 15 minutes or later. Refresh manually for the latest changes. Offline alerts use the last downloaded schedule; expired dates have no alerts.</Text>
       {!!p.status.syncError && <Note>{p.status.syncError}</Note>}
     </Card>
-    <Text style={{ color: colors.muted, fontSize: 11 }}>Android pilot · v0.1.1 · Five daily azan timings</Text>
+    <Text style={{ color: colors.muted, fontSize: 11 }}>Android pilot · v0.1.3 · Five daily azan timings</Text>
   </Page>;
 }

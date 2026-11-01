@@ -1,5 +1,5 @@
 const config = {
-  name: 'PrayOnTime', slug: 'pray-on-time', version: '0.1.2',
+  name: 'PrayOnTime', slug: 'pray-on-time', version: '0.1.3',
   scheme: 'masjidazan', orientation: 'portrait', userInterfaceStyle: 'light',
   icon: './assets/azan-icon.png',
   platforms: ['android', 'web'],

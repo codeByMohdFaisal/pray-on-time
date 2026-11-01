@@ -8,7 +8,7 @@ export function Page({ children }: { children: React.ReactNode }) {
   const { ready, busy, error } = usePilot();
   return <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
     <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
-      <View style={styles.brand}><View style={styles.mark}><Text style={styles.markText}>☾</Text></View><Text style={styles.brandName}>masjid azan<Text style={styles.pilot}> / pilot</Text></Text>{busy && <ActivityIndicator color={colors.green} />}</View>
+      <View style={styles.brand}><View style={styles.mark}><Text style={styles.markText}>☾</Text></View><Text style={styles.brandName}>PrayOnTime</Text>{busy && <ActivityIndicator color={colors.green} />}</View>
       {!ready ? <ActivityIndicator style={{ marginTop: 60 }} color={colors.green} /> : children}
       {!!error && <View accessibilityRole="alert" style={styles.error}><Text style={{ color: '#913C2C' }}>{error}</Text></View>}
       <Text style={styles.footer}>Your masjid. Your timings.</Text>

@@ -9,6 +9,7 @@ import { api, normaliseUrl, Session } from './api';
 
 const CACHE = 'masjid-pilot-v1';
 const TOKEN = 'masjid-volunteer-v1';
+const FIRST_RUN_PERMISSIONS = 'masjid-pilot-first-run-permissions-v1';
 const EMPTY_STATUS: AlarmStatus = { exactAllowed: false, notificationsAllowed: false, audioReady: false, lastSync: 0, syncError: '' };
 interface ContextValue {
   state: SavedState; masjids: Masjid[]; busy: boolean; ready: boolean; error: string;
@@ -32,7 +33,10 @@ export const usePilot = () => useContext(Ctx)!;
 export const DEFAULT_API_URL = 'https://pray-on-time-api.vercel.app';
 
 export function PilotProvider({ children }: { children: React.ReactNode }) {
-  const initial = { ...sampleTables()[0], mode: 'off' as AlertMode, baseUrl: DEFAULT_API_URL };
+  // The included recording is bundled with the Android module, so a new install
+  // can safely default to the full azan experience. Alarms only begin after the
+  // user grants the Android permissions below.
+  const initial = { ...sampleTables()[0], mode: 'audio' as AlertMode, baseUrl: DEFAULT_API_URL };
   const [state, setState] = useState<SavedState>(initial);
   const current = useRef(state);
   const [masjids, setMasjids] = useState(sampleTables().map(t => t.masjid));
@@ -68,8 +72,10 @@ export function PilotProvider({ children }: { children: React.ReactNode }) {
     const latest = native ? JSON.parse(native) as SavedState : current.current;
     if (latest.masjid.id !== previous.masjid.id || latest.baseUrl !== previous.baseUrl) return;
     if ((table.masjid.revision ?? 0) < (latest.masjid.revision ?? 0)) throw new Error('Server returned an older timetable. Existing alerts were kept.');
-    if (table.masjid.revision !== latest.masjid.revision) await persist({ ...table, mode: latest.mode, baseUrl: latest.baseUrl });
-    else { current.current = latest; setState(latest); await refreshStatus(); }
+    // A first install begins with a local placeholder. Its revision can happen
+    // to match the server revision, so revision equality alone must never keep
+    // that placeholder timetable on screen.
+    await persist({ ...table, mode: latest.mode, baseUrl: latest.baseUrl });
     setSyncedAt(Date.now());
   }
   useEffect(() => {
@@ -77,7 +83,8 @@ export function PilotProvider({ children }: { children: React.ReactNode }) {
       try {
         const cached = await AsyncStorage.getItem(CACHE);
         const native = Alarm?.getState();
-        if (native || cached) {
+        const restoredState = Boolean(native || cached);
+        if (restoredState) {
           const restored = JSON.parse(native || cached!) as SavedState;
           await persist(restored);
           setMasjids(restored.baseUrl ? [restored.masjid] : sampleTables().map(t => t.masjid));
@@ -87,13 +94,31 @@ export function PilotProvider({ children }: { children: React.ReactNode }) {
           if (stored) setSession(JSON.parse(stored));
         }
         if (current.current.baseUrl) {
-          try { setMasjids(await api.masjids(current.current.baseUrl)); await sync(); }
+          try {
+            const list = await api.masjids(current.current.baseUrl);
+            if (!list.length) throw new Error('No masjid has been added to this service yet. An administrator can add the first one.');
+            setMasjids(list);
+            const selectedStillExists = list.some(masjid => masjid.id === current.current.masjid.id);
+            if (!restoredState || !selectedStillExists) {
+              // Fresh installs always start with the server's first dropdown
+              // option and its actual timetable, never bundled sample data.
+              const table = await api.timetable(current.current.baseUrl, list[0].id);
+              await persist({ ...table, mode: current.current.mode, baseUrl: current.current.baseUrl });
+              setSyncedAt(Date.now());
+            } else await sync();
+          }
           catch (error) {
             const message = error instanceof Error ? error.message : '';
-            setError(message === 'Masjid not found' ? 'No masjid has been added to this service yet. An administrator can add the first one.' : 'Offline or server unavailable. Showing downloaded timings.');
+            setError(message === 'Masjid not found' || message.startsWith('No masjid has been added') ? 'No masjid has been added to this service yet. An administrator can add the first one.' : 'Offline or server unavailable. Showing downloaded timings.');
           }
         }
         await refreshStatus();
+        if (Platform.OS === 'android' && Alarm && !await AsyncStorage.getItem(FIRST_RUN_PERMISSIONS)) {
+          // Do this once per installation. If it is denied, Settings still
+          // provides a manual retry without nagging on every app launch.
+          await AsyncStorage.setItem(FIRST_RUN_PERMISSIONS, 'shown');
+          await permissions();
+        }
       } catch { setError('Could not restore settings. Re-select your masjid before enabling alerts.'); }
       finally { setReady(true); }
     })();
@@ -110,7 +135,7 @@ export function PilotProvider({ children }: { children: React.ReactNode }) {
     if (!baseUrl) {
       await logout();
       setMasjids(sampleTables().map(t => t.masjid));
-      await persist({ ...sampleTables()[0], mode: 'off', baseUrl: '' });
+      await persist({ ...sampleTables()[0], mode: 'audio', baseUrl: '' });
       return;
     }
     const list = await api.masjids(baseUrl);
@@ -133,7 +158,14 @@ export function PilotProvider({ children }: { children: React.ReactNode }) {
   }
   async function permissions() {
     if (!Alarm) throw new Error('Install the Android app build to enable offline alarms. Browser previews and Expo Go cannot run this module.');
-    if (Platform.OS === 'android' && Number(Platform.Version) >= 33) await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
+    if (Platform.OS === 'android' && Number(Platform.Version) >= 33 && !await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS)) {
+      await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS, {
+        title: 'Enable azan alerts',
+        message: 'PrayOnTime needs notification permission to show and play your azan reminders.',
+        buttonPositive: 'Continue',
+        buttonNegative: 'Not now',
+      });
+    }
     await refreshStatus();
     if (!Alarm.status().exactAllowed) Alarm.openExactSettings();
   }
