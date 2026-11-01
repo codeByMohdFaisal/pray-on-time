@@ -5,6 +5,7 @@ const config = {
   platforms: ['android', 'web'],
   android: {
     package: 'com.masjidazan.pilot',
+    versionCode: 2,
     allowBackup: false,
     blockedPermissions: ['android.permission.READ_EXTERNAL_STORAGE', 'android.permission.WRITE_EXTERNAL_STORAGE', 'android.permission.SYSTEM_ALERT_WINDOW'],
     permissions: ['POST_NOTIFICATIONS', 'SCHEDULE_EXACT_ALARM', 'RECEIVE_BOOT_COMPLETED'],
